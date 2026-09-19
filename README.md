@@ -1,84 +1,84 @@
-# Surface Pro 8 — Linux 舒适配置集
+# Surface Pro 8 — Comfortable Linux Config
 
-针对微软 Surface Pro 8（x86_64，触控屏 + 触控笔）的一套 Linux 调优配置，目标是「开箱即舒适」：触控跟手、多指手势稳定、能跑安卓应用（Waydroid）。
+A set of Linux tuning configs for the Microsoft Surface Pro 8 (x86_64, touchscreen + stylus), aiming for "comfortable out of the box": responsive touch, stable multi-finger gestures, and Android apps via Waydroid.
 
-## 适用环境
+## Target environment
 
-- 硬件：Surface Pro 8（Surface 触控屏走 IPTS 协议，设备 ID `045E:0991`）
-- 系统：Fedora 44（secureblue 加固版亦可，本配置即在其上验证）
-- 内核：linux-surface 定制内核（**必须有**，否则触控屏无驱动）
+- Hardware: Surface Pro 8 (touchscreen uses the IPTS protocol, device ID `045E:0991`)
+- OS: Fedora 44 (secureblue hardened edition also works — this config was verified on it)
+- Kernel: linux-surface custom kernel (**required**, otherwise no touchscreen driver)
 
-## 这套配置解决了什么
+## What this config fixes
 
-1. **触控不跟手 / 轻触不灵**：iptsd 默认触点检测阈值（24/20）对 SP8 偏高，轻触不易注册。这里降到 8/6，并调 PeakSuppression 让多指分离更锐利。
-2. **三指手势偶发变「拖动窗口」**：GNOME/mutter 触摸先落到窗口会优先进「拖动窗口」分支。加强 PeakSuppression 让三指峰更清晰，mutter 更早判定为三指手势。
-3. **Waydroid 窗口大小 / 方向**：单窗口模式 + 横竖屏一键切换脚本。
-4. **游戏触控**：Waydroid `fake_touch` 让鼠标模拟触摸（coc 等触摸游戏可用鼠标玩）。
+1. **Unresponsive touch / light taps not registering**: iptsd's default contact detection thresholds (24/20) are too high for the SP8, so light taps need excessive pressure. Lowered to 8/6 here, plus PeakSuppression tuning for sharper multi-finger separation.
+2. **Three-finger gestures occasionally become "window drag"**: GNOME/mutter prioritizes window dragging when touch lands on a window. Stronger PeakSuppression makes the three peaks clearer, so mutter recognizes the gesture sooner.
+3. **Waydroid window size / orientation**: single-window mode + a one-command portrait/landscape switcher.
+4. **Game touch input**: Waydroid `fake_touch` maps mouse to touch (play touch-only games like Clash of Clans with a mouse).
 
-## 目录结构
+## Directory layout
 
 ```
 .
 ├── README.md
-├── setup.sh                          # 一键部署配置（需 sudo）
+├── README.zh-CN.md                   # 简体中文
+├── setup.sh                          # One-shot config deployment (needs sudo)
 ├── iptsd/
-│   ├── 90-touch-sensitivity.conf     # 触点检测调优（核心）
-│   └── iptsd-priority.conf           # 提高 iptsd 调度优先级，减少多点掉帧
+│   ├── 90-touch-sensitivity.conf     # Contact detection tuning (core)
+│   └── iptsd-priority.conf           # Higher iptsd scheduling priority, fewer multi-touch dropouts
 └── waydroid/
-    └── waydroid-rotate               # Waydroid 横竖屏一键切换脚本
+    └── waydroid-rotate               # One-command Waydroid portrait/landscape switch
 ```
 
-## 快速开始
+## Quick start
 
-### 1. 安装 linux-surface 内核（触控屏必需）
+### 1. Install the linux-surface kernel (required for touchscreen)
 
-Fedora 的默认内核**不含** Surface 触控驱动（`CONFIG_HID_IPTS` / `CONFIG_HID_ITHC`），
-必须换 linux-surface 内核：
+Fedora's stock kernel does **not** include Surface touch drivers (`CONFIG_HID_IPTS` / `CONFIG_HID_ITHC`), so you must switch to the linux-surface kernel:
 
 ```bash
-# 添加 linux-surface 源（Fedora）
+# Add the linux-surface repo (Fedora)
 sudo dnf config-manager --add-repo https://pkg.surfacelinux.com/fedora/linux-surface.repo
-# 安装内核 + iptsd
+# Install kernel + iptsd
 sudo dnf install --allowerasing kernel-surface iptsd libwacom-surface surface-secureboot
-# 重启后切默认内核
+# Reboot, then set the default kernel
 sudo grubby --set-default /boot/vmlinuz-*-surface*
 sudo reboot
 ```
 
-> 验证驱动：`grep -E "CONFIG_HID_IPTS|CONFIG_HID_ITHC" /boot/config-$(uname -r)` 有输出即正常。
+> Verify the driver: `grep -E "CONFIG_HID_IPTS|CONFIG_HID_ITHC" /boot/config-$(uname -r)` should print output.
 
-### 2. 部署本仓库配置
+### 2. Deploy this repo's configs
 
 ```bash
-git clone <本仓库>
+git clone <this-repo>
 cd surface-pro8-fedora-comfort
 sudo bash setup.sh
 ```
 
-### 3. Waydroid（可选）
+### 3. Waydroid (optional)
 
-参考 [Waydroid 官方安装](https://docs.waydro.id/)，装好后执行：
+Follow the [official Waydroid install](https://docs.waydro.id/), then:
 
 ```bash
-# 单窗口模式（整个安卓是一个窗口，可横竖屏切换）
+# Single-window mode (whole Android is one window, switchable orientation)
 waydroid prop set persist.waydroid.multi_windows false
-# 竖屏 405x720（微信/QQ 等竖屏应用）
+# Portrait 405x720 (WeChat/QQ and other portrait apps)
 waydroid-rotate portrait
-# 横屏 960x540（coc 等横屏游戏）
+# Landscape 960x540 (Clash of Clans and other landscape games)
 waydroid-rotate landscape
-# 游戏触控：鼠标模拟触摸（Supercell 游戏，包名按需改）
+# Mouse-as-touch for games (Supercell; adjust package names as needed)
 waydroid prop set persist.waydroid.fake_touch "com.supercell.*"
 ```
 
-## 调优原理（简要）
+## How the tuning works (brief)
 
-- **iptsd** 是 Surface 触摸屏的用户态处理进程，把电容热图转成标准触摸事件。它的触点检测有几个关键参数（见 `iptsd/90-touch-sensitivity.conf`）。
-- **ActivationThreshold / DeactivationThreshold**：触点「出现/消失」的阈值。默认 24/20 对 SP8 偏高，轻触要用力才认。
-- **PeakSuppressionRadius / Factor**：找到触点峰后，把峰周围一圈像素调暗，人为挖深「谷」，让靠得近的多指被拆成独立触点。Radius 管范围、Factor 管力度（越小越狠）。
-  - 本配置 `radius=2 / factor=0.2` 是平衡点：三指手势稳定、单指单击也不丢。
-  - 更激进（`radius=3 / factor=0.12`）三指更稳但**单击会偶发丢失**，别用。
+- **iptsd** is the userspace process that turns Surface's capacitive heatmap into standard touch events. Its contact detection has a few key parameters (see `iptsd/90-touch-sensitivity.conf`).
+- **ActivationThreshold / DeactivationThreshold**: the "appear / disappear" thresholds for contacts. The defaults (24/20) are too high for the SP8.
+- **PeakSuppressionRadius / Factor**: after finding a contact peak, darken the pixels around it to artificially deepen the "valley" between neighboring fingers, so close fingers split into separate contacts. Radius controls range, Factor controls strength (smaller = stronger).
+  - This repo's `radius=2 / factor=0.2` is the sweet spot: stable three-finger gestures without dropping single taps.
+  - Going more aggressive (`radius=3 / factor=0.12`) stabilizes three-finger gestures but **single taps drop occasionally** — don't use it.
 
-## 恢复默认
+## Restore defaults
 
 ```bash
 sudo rm /etc/iptsd.d/90-touch-sensitivity.conf
@@ -87,7 +87,6 @@ sudo systemctl daemon-reload
 sudo systemctl restart iptsd@dev-hidraw0.service
 ```
 
-## 免责声明
+## Disclaimer
 
-本配置在作者自己的 Surface Pro 8（Fedora 44 + secureblue）上验证。硬件批次、内核版本、
-桌面环境差异可能导致效果不同，请自行判断是否适用。
+Verified on the author's own Surface Pro 8 (Fedora 44 + secureblue). Hardware batches, kernel versions, and desktop environments vary — your mileage may vary.
