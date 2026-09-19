@@ -90,6 +90,15 @@ sudo systemctl daemon-reload
 sudo systemctl restart iptsd@dev-hidraw0.service
 ```
 
+## 上游项目
+
+本配置基于以下项目：
+
+- [linux-surface](https://github.com/linux-surface/linux-surface) — 提供 Surface 触控屏支持的内核
+- [iptsd](https://github.com/linux-surface/iptsd) — 把 Surface 触摸热图转成触摸事件的守护进程
+- [Waydroid](https://github.com/waydroid/waydroid) — Linux 容器里的安卓
+- [Fedora](https://fedoraproject.org/) — 基础系统
+
 ## 免责声明
 
 本配置在作者自己的 Surface Pro 8（Fedora 44 + secureblue）上验证。硬件批次、内核版本、

@@ -87,6 +87,15 @@ sudo systemctl daemon-reload
 sudo systemctl restart iptsd@dev-hidraw0.service
 ```
 
+## Upstream projects
+
+This config builds on:
+
+- [linux-surface](https://github.com/linux-surface/linux-surface) — the custom kernel that adds Surface touchscreen support
+- [iptsd](https://github.com/linux-surface/iptsd) — the userspace daemon that turns Surface's touch heatmap into touch events
+- [Waydroid](https://github.com/waydroid/waydroid) — Android in a Linux container
+- [Fedora](https://fedoraproject.org/) — the base OS
+
 ## Disclaimer
 
 Verified on the author's own Surface Pro 8 (Fedora 44 + secureblue). Hardware batches, kernel versions, and desktop environments vary — your mileage may vary.
