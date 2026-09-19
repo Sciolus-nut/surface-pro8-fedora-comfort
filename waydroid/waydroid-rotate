@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# waydroid-rotate — 一键切换 Waydroid 窗口横竖屏
+# 用法: waydroid-rotate [portrait|landscape]
+
+case "${1:-}" in
+  portrait|p|竖屏|竖)
+    W=405; H=720 ;;
+  landscape|l|横屏|横)
+    W=960; H=540 ;;
+  *)
+    echo "用法: $0 [portrait|landscape]"
+    echo "  portrait / 竖屏   405x720"
+    echo "  landscape / 横屏  960x540"
+    exit 1
+    ;;
+esac
+
+waydroid prop set persist.waydroid.width "$W"
+waydroid prop set persist.waydroid.height "$H"
+
+echo "已设为 ${W}x${H}，正在重启会话…"
+waydroid session stop
+sleep 1
+nohup waydroid session start >/dev/null 2>&1 &
+sleep 3
+waydroid status | head -4
